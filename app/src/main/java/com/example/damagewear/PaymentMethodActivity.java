@@ -80,9 +80,15 @@ public class PaymentMethodActivity extends AppCompatActivity {
     }
 
     public void cashMethod(View view){
-        Intent intent = new Intent(this, PaymentActivity.class);
+        Intent intent;
+        if(layoutClicked.equals("Mpesa")) {
+            intent = new Intent(this, PaymentActivity.class);
+        }
+        else{
+            intent = new Intent(this, CashPaymentActivity.class);
+        }
         String message = layoutClicked;
-        intent.putExtra(EXTRA_MESSAGE,message);
+        intent.putExtra(EXTRA_MESSAGE, message);
         startActivity(intent);
     }
 }

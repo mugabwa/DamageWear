@@ -18,6 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DamageWear">
         <activity
+            android:name=".CashPaymentActivity"
+            android:exported="false" />
+        <activity
             android:name=".PaymentActivity"
             android:exported="false" />
         <activity
