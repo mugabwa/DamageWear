@@ -38,7 +38,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction()==MotionEvent.ACTION_DOWN)
                 {
-                    layoutClicked = "layout4";
+                    layoutClicked = "Cash";
                     relativeLayout4.setBackgroundColor(getResources().getColor(R.color.myColor));
                     relativeLayout5.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));
                     relativeLayout6.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));
@@ -53,7 +53,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction()==MotionEvent.ACTION_DOWN)
                 {
-                    layoutClicked = "layout5";
+                    layoutClicked = "Mpesa";
                     relativeLayout5.setBackgroundColor(getResources().getColor(R.color.myColor));
                     relativeLayout4.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));
                     relativeLayout6.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));
@@ -68,7 +68,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction()==MotionEvent.ACTION_DOWN)
                 {
-                    layoutClicked = "layout6";
+                    layoutClicked = "Credit";
                     relativeLayout6.setBackgroundColor(getResources().getColor(R.color.myColor));
                     relativeLayout5.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));
                     relativeLayout4.setBackgroundColor(getResources().getColor(R.color.relativeBackgound));

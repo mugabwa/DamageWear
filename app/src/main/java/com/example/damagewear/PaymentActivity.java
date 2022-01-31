@@ -16,6 +16,5 @@ public class PaymentActivity extends AppCompatActivity {
         String message = intent.getStringExtra(PaymentMethodActivity.EXTRA_MESSAGE);
         TextView textView = findViewById(R.id.textView2);
         textView.setText(message);
-
     }
 }
