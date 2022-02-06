@@ -77,10 +77,10 @@
             android:id="@+id/ksh_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/ksh"
-            android:layout_marginTop="10dp"
             android:layout_marginStart="10dp"
-            android:text="80" />
+            android:layout_marginTop="10dp"
+            android:layout_toEndOf="@+id/ksh"
+            android:text="0" />
 
     </RelativeLayout>
 
@@ -107,8 +107,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toEndOf="@+id/from"
             android:layout_marginStart="10dp"
+            android:layout_toEndOf="@+id/from"
             android:text="Origin" />
 
     </RelativeLayout>

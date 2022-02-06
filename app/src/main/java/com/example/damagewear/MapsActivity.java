@@ -1,9 +1,9 @@
 package com.example.damagewear;
 
-import static android.provider.AlarmClock.EXTRA_MESSAGE;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -13,6 +13,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -23,9 +24,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationRequest;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.util.AttributeSet;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -53,22 +57,34 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Permission;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MapsActivity extends FragmentActivity implements
         OnMapReadyCallback,
         GoogleMap.OnMyLocationButtonClickListener {
+
 
     private GoogleMap mMap;
     private LatLng mOrigin;
@@ -82,12 +98,27 @@ public class MapsActivity extends FragmentActivity implements
     public static final String EXTRA_MESSAGE = "com.example.damagewear.MESSAGE";
     SupportMapFragment mapView;
     View btnCurrentLocation;
+    TextView origin;
+    TextView destination, cost_ksh;
+    Geocoder place;
+    List<Address> addresses;
+    JSONObject distance;
+    AtomicBoolean processed = new AtomicBoolean(true);
+
+    String domain_name;
+    PersistentCookieStore store;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        distance = new JSONObject();
         searchView = findViewById(R.id.idSearchView);
+        origin = (TextView) findViewById(R.id.fromPlace);
+        destination = (TextView) findViewById(R.id.toPlace);
+        cost_ksh = (TextView) findViewById(R.id.ksh_amount);
+        domain_name = getString(R.string.web_domain_name);
+        store = new PersistentCookieStore(this);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -115,6 +146,7 @@ public class MapsActivity extends FragmentActivity implements
         });
         // in below line we are initializing our array list.
         mMarkerPoints = new ArrayList<>();
+        addresses = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         mapView = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map));
         fetchLocation();
@@ -155,15 +187,9 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onMapReady(GoogleMap googleMap) {
         System.out.println("****The map is ready*****");
+        place = new Geocoder(this, Locale.getDefault());
         mMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         mMap.setMyLocationEnabled(true);
@@ -178,10 +204,16 @@ public class MapsActivity extends FragmentActivity implements
                 // If you already have 2 points
                 if (mMarkerPoints.size()>1){
                     mMarkerPoints.clear();
+                    addresses.clear();
                     mMap.clear();
                 }
                 // Adding new item to the list
                 mMarkerPoints.add(latLng);
+                try {
+                    addresses.add(place.getFromLocation(latLng.latitude,latLng.longitude, 1).get(0));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 // Creating pointer
                 MarkerOptions options = new MarkerOptions();
 
@@ -199,6 +231,39 @@ public class MapsActivity extends FragmentActivity implements
                     mOrigin = mMarkerPoints.get(0);
                     mDestination = mMarkerPoints.get(1);
                     drawRoute();
+                    origin.setText(addresses.get(0).getAddressLine(0));
+                    destination.setText(addresses.get(1).getAddressLine(0));
+                    synchronized (processed) {
+                        String result = "";
+                        try {
+                            processed.wait();
+                            result=FetchData(addresses.get(0).getAddressLine(0), addresses.get(1).getAddressLine(0));
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        // ToDo
+                        if (result.equals("ERROR:-Not found")) {
+                            try {
+                                String dist = distance.get("text").toString();
+                                double cost = 0.03 * (int) distance.get("value");
+                                DecimalFormat df = new DecimalFormat("0.00");
+                                df.setRoundingMode(RoundingMode.UP);
+                                cost_ksh.setText(df.format(cost));
+
+                                // ToDo
+                                LoadData(addresses.get(0).getAddressLine(0), addresses.get(1).getAddressLine(0), dist, cost);
+                            } catch (InterruptedException | JSONException interruptedException) {
+                                interruptedException.printStackTrace();
+                            } catch (MalformedURLException malformedURLException) {
+                                malformedURLException.printStackTrace();
+                            } catch (URISyntaxException uriSyntaxException) {
+                                uriSyntaxException.printStackTrace();
+                            }
+                        } else {
+                            cost_ksh.setText(result);
+                        }
+                    }
+
                 }
             }
         });
@@ -210,6 +275,25 @@ public class MapsActivity extends FragmentActivity implements
         rlp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
         rlp.setMargins(0, 0, 30, 30);
 
+    }
+
+    void LoadData(String org, String dest, String dist, Double cost) throws MalformedURLException, URISyntaxException, InterruptedException {
+        AsyncRequset P = new AsyncRequset("POST",this);
+        P.setUrl(domain_name+"load_data/");
+        P.setRequestBody("data="+"origin="+org+"#destination="+dest+"#distance="+dist+"#cost="+cost);
+        P.start();
+        P.join();
+        System.out.println("Response:** "+P.getResponseBody());
+    }
+
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public String FetchData(String org, String dest) throws InterruptedException{
+        AsyncRequset P=new AsyncRequset("POST", this);
+        P.setUrl(domain_name+"fetch_data/");
+        P.setRequestBody("data="+"origin="+org+"#destination="+dest);
+        P.start();
+        P.join();
+        return P.getResponseBody();
     }
 
     @Override
@@ -258,7 +342,9 @@ public class MapsActivity extends FragmentActivity implements
             urlConnection.connect();
             // Read data form url
             inputStream = urlConnection.getInputStream();
+
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
             StringBuffer stringBuffer = new StringBuffer();
             String line = "";
             while ((line= bufferedReader.readLine()) != null){
@@ -271,6 +357,29 @@ public class MapsActivity extends FragmentActivity implements
         } finally {
             inputStream.close();
             urlConnection.disconnect();
+        }
+        JSONObject obj;
+        try{
+            obj = new JSONObject(data);
+            JSONArray result_arr = obj.getJSONArray("routes");
+            final int n = result_arr.length();
+            JSONArray res1 = new JSONArray();
+            for (int i=0; i<n;++i){
+                res1 = result_arr.getJSONObject(i).getJSONArray("legs");
+                if (res1 != null)
+                    break;
+            }
+            synchronized (processed) {
+                for (int i = 0; i < res1.length(); ++i) {
+                    if (res1.getJSONObject(i).get("distance") != null) {
+                        distance = (JSONObject) res1.getJSONObject(i).get("distance");
+                    }
+                }
+                processed.notify();
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         return data;
     }
