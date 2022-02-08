@@ -132,9 +132,15 @@ public class MapsActivity extends FragmentActivity implements
                         e.printStackTrace();
                     }
                     Address address = addressList.get(0);
+                    // Empty search box
+                    searchView.setQuery("",false);
                     LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(location));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10));
+//                    Marker options disabled for searched location
+//                    MarkerOptions options = new MarkerOptions();
+//                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+//                    mMap.addMarker(options.position(latLng).title(location));
+//                    Find search location with a zoom level
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
                 }
                 return false;
             }
@@ -220,9 +226,9 @@ public class MapsActivity extends FragmentActivity implements
                 // Setting position
                 options.position(latLng);
                 if (mMarkerPoints.size()==1){
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
                 } else if (mMarkerPoints.size()==2){
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 }
                 // Add new marker to the API
                 mMap.addMarker(options);
