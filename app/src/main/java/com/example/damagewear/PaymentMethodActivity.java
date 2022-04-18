@@ -16,6 +16,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
     private String layoutClicked = "";
     public static final String EXTRA_MESSAGE = "com.example.damagewear.MESSAGE";
     private String amount;
+    String m_key;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -25,6 +26,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
         amount = intent.getStringExtra(MapsActivity.EXTRA_MESSAGE);
+        m_key = intent.getStringExtra("CURRENT_KEY");
         // Capture the layout's TextView and set the string as its text
         RelativeLayout relativeLayout4 = findViewById(R.id.relativeLayout4);
         RelativeLayout relativeLayout5 = findViewById(R.id.relativeLayout5);
@@ -71,6 +73,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
             intent = new Intent(this, CashPaymentActivity.class);
         }
         intent.putExtra(EXTRA_MESSAGE, amount);
+        intent.putExtra("CURRENT_KEY",m_key);
         startActivity(intent);
     }
 }

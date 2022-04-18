@@ -107,6 +107,7 @@ public class MapsActivity extends FragmentActivity implements
 
     String domain_name;
     PersistentCookieStore store;
+    String msg_key;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +120,7 @@ public class MapsActivity extends FragmentActivity implements
         cost_ksh = (TextView) findViewById(R.id.ksh_amount);
         domain_name = getString(R.string.web_domain_name);
         store = new PersistentCookieStore(this);
+        msg_key = "";
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -166,6 +168,7 @@ public class MapsActivity extends FragmentActivity implements
         TextView editText = (TextView) findViewById(R.id.ksh_amount);
         String message = editText.getText().toString();
         intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra("CURRENT_KEY",msg_key);
         startActivity(intent);
     }
 
@@ -289,6 +292,7 @@ public class MapsActivity extends FragmentActivity implements
         P.setRequestBody("data="+"origin="+org+"#destination="+dest+"#distance="+dist+"#cost="+cost);
         P.start();
         P.join();
+        msg_key = P.getResponseBody();
         System.out.println("Response:** "+P.getResponseBody());
     }
 
