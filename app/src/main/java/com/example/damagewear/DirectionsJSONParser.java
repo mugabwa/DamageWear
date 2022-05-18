@@ -1,5 +1,7 @@
 package com.example.damagewear;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
@@ -11,11 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DirectionsJSONParser {
+    private static final String TAG = DirectionsJSONParser.class.getSimpleName();
     public List<List<HashMap<String,String>>> parse(JSONObject jObject){
         List<List<HashMap<String,String>>> routes = new ArrayList<>();
-        JSONArray jRoutes = null;
-        JSONArray jLegs = null;
-        JSONArray jSteps = null;
+        JSONArray jRoutes;
+        JSONArray jLegs;
+        JSONArray jSteps;
 
         try {
             jRoutes = jObject.getJSONArray("routes");
@@ -45,11 +48,8 @@ public class DirectionsJSONParser {
                     routes.add(path);
                 }
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        catch (Exception e){
-            System.out.println("Error: "+e.toString());
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
         }
         return routes;
     }

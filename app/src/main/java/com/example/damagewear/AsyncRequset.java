@@ -65,7 +65,7 @@ public class AsyncRequset extends Thread{
                 status==HttpURLConnection.HTTP_SEE_OTHER)
                     redirect = true;
             }
-            System.out.println("Response Code ... "+status);
+            Log.i(TAG, "Response Code ... "+status);
             if (redirect){
                 String newUrl = httpURLConnection.getHeaderField("Location");
                 List<String> cookiesL = httpURLConnection.getHeaderFields().get("set-cookie");

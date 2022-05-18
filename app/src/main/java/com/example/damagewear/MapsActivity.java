@@ -28,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.StrictMode;
+import android.telephony.SmsManager;
 import android.util.AttributeSet;
 import android.util.JsonReader;
 import android.util.Log;
@@ -96,6 +97,7 @@ public class MapsActivity extends FragmentActivity implements
     ArrayList<LatLng> mMarkerPoints;
     private static final int REQUEST_CODE = 101;
     public static final String EXTRA_MESSAGE = "com.example.damagewear.MESSAGE";
+    private static final String TAG = MapsActivity.class.getSimpleName();
     SupportMapFragment mapView;
     View btnCurrentLocation;
     TextView origin;
@@ -104,10 +106,10 @@ public class MapsActivity extends FragmentActivity implements
     List<Address> addresses;
     JSONObject distance;
     AtomicBoolean processed = new AtomicBoolean(true);
-
     String domain_name;
     PersistentCookieStore store;
     String msg_key;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +171,18 @@ public class MapsActivity extends FragmentActivity implements
         String message = editText.getText().toString();
         intent.putExtra(EXTRA_MESSAGE, message);
         intent.putExtra("CURRENT_KEY",msg_key);
+        StartSignal();
+        Log.i(TAG, "Changing to a new intent");
         startActivity(intent);
+    }
+
+    // Signal start of data stream
+    public void StartSignal(){
+        String msg = "#START#";
+        SmsManager smsManager = SmsManager.getDefault();
+        smsManager.sendTextMessage(getString(R.string.phone_number),null,msg,null,null);
+        Toast.makeText(getApplicationContext(), "Message Sent successfully!", Toast.LENGTH_LONG).show();
+        Log.i(TAG, "Start signal send successful");
     }
 
     private void fetchLocation(){
@@ -195,7 +208,7 @@ public class MapsActivity extends FragmentActivity implements
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        System.out.println("****The map is ready*****");
+        Log.d(TAG, "****The map is ready*****");
         place = new Geocoder(this, Locale.getDefault());
         mMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -293,7 +306,7 @@ public class MapsActivity extends FragmentActivity implements
         P.start();
         P.join();
         msg_key = P.getResponseBody();
-        System.out.println("Response:** "+P.getResponseBody());
+        Log.i(TAG, "Response:** "+P.getResponseBody());
     }
 
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -335,7 +348,7 @@ public class MapsActivity extends FragmentActivity implements
         // Output format
         String output = "json";
         // Build the url
-        String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
+        String url = getString(R.string.google_directions_api)+output+"?"+parameters;
         return url;
     }
 
